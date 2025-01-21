@@ -17,6 +17,7 @@ ollama
 openai
 scikit-learn
 fastapi
+fastapi[standard]
 typing
 pydantic
 python-multipart

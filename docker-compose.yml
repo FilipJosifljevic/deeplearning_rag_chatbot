@@ -1,0 +1,23 @@
+services:
+  frontend:
+    build:
+      context: ./frontend-rag-deep-learning-chatbot
+    ports:
+      - "0.0.0.0:4200:4200"
+    working_dir: /workspace
+    networks:
+      - rag-network
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    working_dir: /workspace
+    command: uvicorn api_rag:app --host 0.0.0.0 --port 8000
+    networks:
+      - rag-network
+
+networks:
+  rag-network:
+    driver: bridge
