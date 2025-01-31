@@ -2,10 +2,21 @@ import os
 import prompts
 import rag
 from fastapi import FastAPI, HTTPException, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 
 app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        )
 
 class QueryRequest(BaseModel):
     query: str
@@ -14,7 +25,7 @@ class QueryRequest(BaseModel):
 @app.on_event("startup")
 async def load_existing_documents():
     try:
-        documents_folder = "documents"
+        documents_folder = "/workspace/documents"
         
         # Create the folder if it doesn't exist
         if not os.path.exists(documents_folder):
@@ -48,7 +59,7 @@ async def load_existing_documents():
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
     try:
-        documents_folder = "documents"
+        documents_folder = "/workspace/documents"
         file_location = os.path.join(documents_folder, file.filename)
         
         # Save the uploaded file to the folder

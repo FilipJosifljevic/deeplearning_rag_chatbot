@@ -3,7 +3,9 @@ services:
     build:
       context: ./frontend-rag-deep-learning-chatbot
     ports:
-      - "0.0.0.0:4200:4200"
+      - "7654:4200"
+    depends_on:
+      - backend
     working_dir: /workspace
     networks:
       - rag-network
@@ -14,7 +16,10 @@ services:
     ports:
       - "8000:8000"
     working_dir: /workspace
-    command: uvicorn api_rag:app --host 0.0.0.0 --port 8000
+    volumes: 
+      - ./backend/documents:/workspace/documents
+    env_file:
+      - .env
     networks:
       - rag-network
 

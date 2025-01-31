@@ -14,8 +14,8 @@ import { FileService } from '../file.service';
 export class ChatComponent {
   messages: { text: string; isUser: boolean }[] = [];
   newMessage: string = '';
-  chatService!: ChatService;
-  fileService!: FileService;
+
+  constructor(private chatService: ChatService, private fileService: FileService) {}
 
   sendMessage(): void {
     if (this.newMessage.trim()) {

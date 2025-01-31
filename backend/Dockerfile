@@ -2,7 +2,6 @@ FROM python:3.10-slim
 
 WORKDIR /workspace
 
-# Add NodeSource repository for installing Node.js (including npm)
 COPY requirements.txt /workspace/requirements.txt
 
 RUN pip3 config set global.index-url https://pypi.org/simple

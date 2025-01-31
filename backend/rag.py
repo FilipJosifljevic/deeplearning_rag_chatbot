@@ -1,13 +1,17 @@
 import fitz
 import faiss
 import prompts
+import os
 import numpy as np
 from openai import OpenAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
+from dotenv import load_dotenv
+
+load_dotenv()
 
 client = OpenAI(
-        base_url="https://models.institutonline.ai/v1",
-        api_key="bilosta"
+        base_url=os.getenv('OPENAI_BASE_URL'),
+        api_key=os.getenv('OPENAI_KEY')
         )
 def load_documents(pdf_path):
     doc = fitz.open(pdf_path)
@@ -19,8 +23,10 @@ def load_documents(pdf_path):
 
     return texts
 
+chat_memory = []
+
 model_name = "sentence-transformers/all-mpnet-base-v2"
-model_kwargs = {'device': 'cpu'}
+model_kwargs = {'device': os.getenv('EMBEDDINGS_DEVICE')}
 encode_kwargs = {'normalize_embeddings': False}
 
 hf = HuggingFaceEmbeddings(
@@ -42,14 +48,17 @@ def add_to_faiss(texts):
 def call_openai(prompt):
     response = client.chat.completions.create(
         model="llama3.1",
-        messages=[
-            {"role": "system", "content": "Ti si AI asistent"},
+        messages=chat_memory + 
+        [
             {"role": "user", "content": prompt}
-         ]
+        ]
      )
 
+    assistant_reply = response.choices[0].message.content
+    chat_memory.append({"role": "assistant", "content": assistant_reply})
+
     #return response
-    return response.choices[0].message.content
+    return assistant_reply
 
 def retrieve_relevant_documents(query, top_k=10):
     query_embedding = hf.embed_query(query)

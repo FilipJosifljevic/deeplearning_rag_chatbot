@@ -20,4 +20,5 @@ fastapi
 fastapi[standard]
 typing
 pydantic
+python-dotenv
 python-multipart

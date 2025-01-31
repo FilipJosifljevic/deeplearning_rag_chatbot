@@ -1,0 +1,11 @@
+./cache/huggingface_cache/
+./cache/transformers_cache/
+
+.env
+.env.*
+*.env
+
+Dockerfile
+docker-compose.yml
+.dockerignore
+**/Dockerfile
