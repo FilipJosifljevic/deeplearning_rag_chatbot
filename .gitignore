@@ -1,5 +1,4 @@
-./cache/huggingface_cache/
-./cache/transformers_cache/
+.cache/huggingface_cache/
 
 .env
 .env.*
