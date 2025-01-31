@@ -1,4 +1,4 @@
-.cache/huggingface_cache/
+.cache/huggingface/
 
 .env
 .env.*
