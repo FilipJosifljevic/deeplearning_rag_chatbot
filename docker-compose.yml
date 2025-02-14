@@ -1,23 +1,25 @@
 services:
   frontend:
+    container_name: rag-frontend
     build:
       context: ./frontend-rag-deep-learning-chatbot
-    ports:
-      - "7654:4200"
-    depends_on:
-      - backend
-    working_dir: /workspace
+    volumes:
+      - frontend-dist:/workspace/dist
     networks:
       - rag-network
+    depends_on:
+      - backend
 
   backend:
+    container_name: rag-backend
     build:
       context: ./backend
     ports:
-      - "8000:8000"
+      - "7654:8000"
     working_dir: /workspace
     volumes: 
       - ./backend/documents:/workspace/documents
+      - frontend-dist:/app/static
     env_file:
       - .env
     networks:
@@ -26,3 +28,6 @@ services:
 networks:
   rag-network:
     driver: bridge
+
+volumes:
+  frontend-dist:

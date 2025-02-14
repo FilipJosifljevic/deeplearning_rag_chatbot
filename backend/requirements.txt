@@ -22,3 +22,4 @@ typing
 pydantic
 python-dotenv
 python-multipart
+huggingface_hub

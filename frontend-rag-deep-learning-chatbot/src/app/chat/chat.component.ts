@@ -20,21 +20,21 @@ export class ChatComponent {
   sendMessage(): void {
     if (this.newMessage.trim()) {
       this.messages.push({ text: this.newMessage, isUser: true });
-      this.chatService.sendQuery(this.newMessage.trim()).subscribe(
-        (response) => {
-          this.messages.push({ text: response.answer, isUser: false }); // Odgovor agenta
-          console.log('odgovor agenta');
+
+      let botResponse = { text: '', isUser: false };
+      this.messages.push(botResponse);
+
+      this.chatService.sendQuery(this.newMessage.trim()).subscribe({
+        next: (chunk: string) => {
+          botResponse.text += chunk; // Append tokens live
         },
-        (error) => {
+        error: (error: any) => {
           console.error('Error fetching response:', error);
-          this.messages.push({ text: 'Error: Unable to fetch response.', isUser: false });
+          botResponse.text = 'Error: Unable to fetch response.';
         }
-      );
-      this.newMessage = '';
-      
-     // setTimeout(() => {
-     //   this.messages.push({ text: 'This is a response from the agent.', isUser: false });
-     // }, 1000);
+      });
+
+      this.newMessage = ''; // Clear input field
     }
   }
 
@@ -42,18 +42,18 @@ export class ChatComponent {
   
   uploadFile(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
+    if (input && input.files && input.files.length > 0) {
       const file = input.files[0];
       console.log('File uploaded:', file);
 
-      this.fileService.uploadFile(file).subscribe(
-        (response) => {
+      this.fileService.uploadFile(file).subscribe({
+        next : (response) => {
           console.log(response);
         },
-        (error) => {
+        error : (error: any) => {
           console.error('Error during file upload:', error);
         }
-      );
+      });
     }
 
   }

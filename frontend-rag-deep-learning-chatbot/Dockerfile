@@ -1,11 +1,11 @@
 FROM node:21
 
-WORKDIR /workspace
+WORKDIR /app
 
 COPY . .
 
-RUN npm install -g @angular/cli
+RUN npm install && npm run build --prod
 
-CMD ng serve --host 0.0.0.0 --port 4200
-
-EXPOSE 4200
+FROM alpine:latest
+WORKDIR /workspace
+COPY --from=build /app/dist/frontend-rag-deep-learning-chatbot /workspace/dist

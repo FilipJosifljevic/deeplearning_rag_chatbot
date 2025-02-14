@@ -1,10 +1,13 @@
 import os
 import prompts
 import rag
+from fastapi import Request
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse, StreamingResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-
 
 app = FastAPI()
 
@@ -17,6 +20,16 @@ app.add_middleware(
         allow_methods=["*"],
         allow_headers=["*"],
         )
+
+frontend_files_path = os.path.join(os.getcwd(), "frontend", "frontend-rag-deep-learning-chatbot", "browser")
+
+app.mount('/static', StaticFiles(directory=frontend_files_path, html=True), name='static')
+
+@app.get("/{full_path:path}")
+async def catch_all(full_path: str):
+    if full_path and full_path not in ["chat", "upload"]:
+        return FileResponse(f"{frontend_files_path}/{full_path}")
+    return FileResponse(f"{frontend_files_path}/index.html")
 
 class QueryRequest(BaseModel):
     query: str
@@ -56,7 +69,7 @@ async def load_existing_documents():
     except Exception as e:
         print(f"Error loading documents: {str(e)}")
 
-@app.post("/upload/")
+@app.post("/api/upload/")
 async def upload_file(file: UploadFile = File(...)):
     try:
         documents_folder = "/workspace/documents"
@@ -80,27 +93,18 @@ async def upload_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"Error processing file: {str(e)}")
 
 
-@app.post("/query/")
+@app.post("/api/query/")
 async def query_rag_chatbot(request: QueryRequest):
     query = request.query
     try:
         # Ensure that we have documents loaded in the FAISS index
         if not rag.texts:
             raise HTTPException(status_code=400, detail="No documents available for querying.")
-
-        relevant_docs = rag.retrieve_relevant_documents(query)
-        print(f"Found {len(relevant_docs)} relevant documents")
-        # If no relevant documents are found, return an error
-        if not relevant_docs:
-            raise HTTPException(status_code=400, detail="No relevant documents found for the query.")
         
-        context = "\n".join(relevant_docs)
-        prompt = prompts.get_full_rag_prompt(context, query)
+        stream_generator  = rag.call_openai(query)
 
-        # Call OpenAI to get the answer based on the context
-        answer = rag.call_openai(prompt)
-
-        return {"answer": answer}
+        #return {"response": list(stream_generator)}
+        return StreamingResponse(stream_generator, media_type="text/event-stream")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
