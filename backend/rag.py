@@ -1,12 +1,14 @@
 import fitz
-import faiss
 import prompts
 import os
 import numpy as np
 from openai import OpenAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.document_loaders import PyPDFDirectoryLoader
 from dotenv import load_dotenv
+from chunks import get_semantic_chunks
+from vectorstore import initialize_chroma
+from embeddings import get_hf_embeddings
 
 load_dotenv()
 
@@ -14,52 +16,10 @@ client = OpenAI(
         base_url=os.getenv('OPENAI_BASE_URL'),
         api_key=os.getenv('OPENAI_KEY')
         )
-def load_documents(pdf_path):
-    doc = fitz.open(pdf_path)
-    split_texts = []
-    texts = [] 
-
-    for page_num in range(len(doc)):
-        page = doc.load_page(page_num)
-        texts.append(page.get_text("text"))
-        split_texts.extend(split_text(page.get_text("text")))
-
-    return split_texts
 
 chat_memory = []
 
-model_name="sentence-transformers/all-mpnet-base-v2"
-model_kwargs = {'device': os.getenv('EMBEDDINGS_DEVICE')}
-encode_kwargs = {'normalize_embeddings': True}
-
-hf = HuggingFaceEmbeddings(
-    model_name=model_name,
-    model_kwargs=model_kwargs,
-    encode_kwargs=encode_kwargs
-)
-
-dimension = 768
-index = faiss.IndexFlatL2(dimension)
-
 texts = []
-
-def split_text(text, chunk_size=500, overlap=100):
-
-    splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=overlap,
-            separators=["\n\n", "\n", " ", ""],
-            length_function=len
-            )
-
-    return splitter.split_text(text)
-
-def add_to_faiss(text_chunks):
-    global texts
-    texts.extend(text_chunks)
-    embeddings = hf.embed_documents(text_chunks)
-    faiss_embeddings = np.array(embeddings).astype('float32')
-    index.add(faiss_embeddings)
 
 def call_openai(prompt):
     chat_memory.append({"role": "user", "content": prompt})
@@ -85,12 +45,10 @@ def call_openai(prompt):
     #return assistant_reply
 
 def retrieve_relevant_documents(query, top_k=5):
-    query_embedding = hf.embed_query(query)
-    query_embedding = np.array(query_embedding).astype('float32').reshape(1, -1)
-    distances, indices = index.search(query_embedding, top_k)
-    retrieved_docs = [texts[i] for i in indices[0]] if indices.size > 0 else []
-    
-    return retrieved_docs
+    chromadb = initialize_chroma()
+    embedded_query = get_hf_embeddings().embed_query(query)
+    results = chromadb.similarity_search(embedded_query, k=top_k)
+    return [doc.page_content for doc in results]
 
 
 def ask_the_chatbot(query):
@@ -104,7 +62,5 @@ def ask_the_chatbot(query):
     
     prompt = prompts.get_full_rag_prompt(context, query)
 
-    answer = call_openai(prompt)
-
-    return answer
-
+    for chunk in call_openai(prompt):
+        yield chunk

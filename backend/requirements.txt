@@ -9,10 +9,11 @@ protobuf
 pymupdf
 langchain
 langchain-community
-pdfplumber
+pypdf
+pymupdf4llm
 numpy
 sentence-transformers
-faiss_cpu
+chromadb
 ollama
 openai
 scikit-learn
@@ -23,3 +24,4 @@ pydantic
 python-dotenv
 python-multipart
 huggingface_hub
+langchain_experimental
