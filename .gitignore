@@ -8,4 +8,4 @@ Dockerfile
 docker-compose.yml
 .dockerignore
 **/Dockerfile
-/backend/documents
+/backend/documents/
