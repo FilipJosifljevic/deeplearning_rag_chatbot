@@ -1,0 +1,11 @@
+.cache/huggingface/
+
+.env
+.env.*
+*.env
+
+Dockerfile
+docker-compose.yml
+.dockerignore
+**/Dockerfile
+/backend/documents/
