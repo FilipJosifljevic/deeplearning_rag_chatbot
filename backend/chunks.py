@@ -1,14 +1,8 @@
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain.text_splitter import MarkdownTextSplitter, RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from embeddings import get_hf_embeddings
 
-hf_embeddings = HuggingFaceEmbeddings(
-        model_name='sentence-transformers/all-mpnet-base-v2',
-        model_kwargs={'device' : 'cpu'},
-        encode_kwargs={'normalize_embeddings': True}
-        )
-
-semantic_chunker = SemanticChunker(hf_embeddings, breakpoint_threshold_type="percentile")
+semantic_chunker = SemanticChunker(get_hf_embeddings(), breakpoint_threshold_type="percentile")
 markdown_splitter = MarkdownTextSplitter(chunk_size=500, chunk_overlap=100)
 recursive_character_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100, length_function=len, is_separator_regex=False)
 
