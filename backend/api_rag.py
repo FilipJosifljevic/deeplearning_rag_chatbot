@@ -73,7 +73,7 @@ async def query_rag_chatbot(request: QueryRequest):
     query = request.query
     try:
         
-        stream_generator  = rag.call_openai(query)
+        stream_generator  = rag.ask_the_chatbot(query)
 
         #return {"response": list(stream_generator)}
         return StreamingResponse(stream_generator, media_type="text/event-stream")

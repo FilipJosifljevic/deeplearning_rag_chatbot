@@ -5,7 +5,7 @@ from langchain.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.document_loaders import PyMuPDFLoader
 from embeddings import get_hf_embeddings
-from chunks import get_semantic_chunks
+from chunks import get_semantic_chunks, get_recursively_split_chunks
 
 chromadb = None
 
