@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../chat.service';
@@ -15,7 +15,7 @@ export class ChatComponent {
   messages: { text: string; isUser: boolean }[] = [];
   newMessage: string = '';
 
-  constructor(private chatService: ChatService, private fileService: FileService) {}
+  constructor(private chatService: ChatService, private fileService: FileService, private cdr: ChangeDetectorRef) {}
 
   sendMessage(): void {
     if (this.newMessage.trim()) {
@@ -26,11 +26,13 @@ export class ChatComponent {
 
       this.chatService.sendQuery(this.newMessage.trim()).subscribe({
         next: (chunk: string) => {
-          botResponse.text += chunk; // Append tokens live
+          botResponse.text += chunk;
+	  this.cdr.detectChanges(); // Append tokens live
         },
         error: (error: any) => {
           console.error('Error fetching response:', error);
           botResponse.text = 'Error: Unable to fetch response.';
+	  this.cdr.detectChanges();
         }
       });
 
