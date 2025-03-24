@@ -1,9 +1,15 @@
 import fitz
 import prompts
 import os
+import time
 import numpy as np
+import queue
+import threading
 import logging
+import asyncio
+from typing import AsyncGenerator
 from openai import OpenAI
+from fastapi.responses import StreamingResponse
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.document_loaders import PyPDFDirectoryLoader
 from sentence_transformers import SentenceTransformer, util
@@ -28,30 +34,82 @@ chat_memory = []
 
 texts = []
 
-def call_openai(prompt):
-    logger.info(f"\nLLM PROMPT : \n{repr(prompt)}\n")
+data_streaming_started = threading.Event()
+response_queue = queue.Queue()
+error_queue = queue.Queue()
 
-    chat_memory.append({"role": "user", "content": prompt})
+def heartbeat_task():
+    while not data_streaming_started.is_set():
+        yield "[heartbeat]\n"
+        time.sleep(1)
 
-    response = client.chat.completions.create(
-        model="llama3.1",
-        messages=chat_memory,
-        stream=True
-     )
 
-    def generate():
+def openai_response_thread(query):
+    try:
+        relevant_docs = retrieve_relevant_documents(query)
+        context = "\n\n".join(relevant_docs)
+        prompt = prompts.get_full_english_rag_prompt(context, query)
+
+        chat_memory.append({"role": "user", "content": prompt})
+
         full_response = ""
+
+        response = client.chat.completions.create(
+                model="llama3.1",
+                messages=chat_memory,
+                stream=True
+                )
+
+        full_response = ""
+
         for chunk in response:
             if chunk.choices and chunk.choices[0].delta.content:
                 text = chunk.choices[0].delta.content
                 full_response += text
-                yield text
+
+                if not data_streaming_started.is_set():
+                    data_streaming_started.set()
+
+                response_queue.put(text)
+
+        response_queue.put(None)
+
         chat_memory.append({"role": "assistant", "content": full_response})
 
-    return generate()
+    except Exception as e:
+        logger.error(f"Error in OpenAI response thread : {str(e)}")
+        error_queue.put(str(e))
+        response_queue.put(None)
 
-    #return response
-    #return assistant_reply
+def generate_streaming_response(query):
+    data_streaming_started.clear()
+
+    openai_thread = threading.Thread(target=openai_response_thread, args=(query, ), daemon=True)
+    openai_thread.start()
+
+    for heartbeat in heartbeat_task():
+        yield "data : [heartbeat]\n"
+
+        try:
+            error = error_queue.get_nowait()
+            yield error
+            return
+        except queue.Empty:
+            pass
+
+    while True:
+        try:
+            chunk = response_queue.get()
+            if chunk is None:
+                    break
+            yield chunk
+        except queue.Empty:
+            yield "data: Error : response timeout"
+            break
+        except Exception as e:
+            logger.error(f"Error in streaming response: {str(e)}")
+            yield f"data: Error: {str(e)}\n\n"
+            break
 
 def retrieve_relevant_documents(query, top_k=10):
     chromadb = initialize_chroma()
@@ -70,23 +128,4 @@ def rerank_with_sbert(query, results):
     sorted_results = sorted(zip(results, scores), key=lambda x: x[1], reverse=True)
     return [doc.page_content for doc, _ in sorted_results]
 
-def ask_the_chatbot(query):
-    relevant_docs = retrieve_relevant_documents(query)
 
-    if not relevant_docs:
-        logger.info("No relevant documents found.")
-        yield "No relevant documents found."
-        return
-
-    context = "\n\n".join(relevant_docs)
-    
-    logger.info(f"Retrieved context : \n{context}")
-
-    prompt = prompts.get_full_english_rag_prompt(context, query)
-    
-    logger.info(f"Generated Prompt for LLM:\n{prompt}")
-
-    response_generator = call_openai(prompt)
-
-    for chunk in response_generator:
-        yield chunk

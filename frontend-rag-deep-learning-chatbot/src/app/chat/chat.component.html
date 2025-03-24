@@ -1,19 +1,31 @@
 <div class="chat-container">
-    <div class="chat-window">
-      <div *ngFor="let message of messages" [ngClass]="{'user': message.isUser, 'agent': !message.isUser}">
-        <div class="message">{{ message.text }}</div>
+  <p-card class="chat-card">
+    <ng-template pTemplate="header">
+      <div class="chat-header">
+        <span class="font-bold text-lg">🤖 RAG ChatBot</span>
       </div>
-    </div>
-    <div class="chat-input">
-      <input
-        type="text"
-        [(ngModel)]="newMessage"
-        placeholder="Type your message..."
-        (keydown.enter)="sendMessage()"
-      />
-      <button (click)="sendMessage()">Send</button>
-      <label for="file-upload" class="file-upload-btn">Upload File</label>
-      <input id="file-upload" type="file" (change)="uploadFile($event)" hidden />
-    </div>
-  </div>
-  
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      <!-- Chat Messages -->
+      <p-scrollPanel class="chat-window">
+        <div *ngFor="let message of messages" [ngClass]="{'user-message': message.isUser, 'bot-message': !message.isUser}">
+          <div class="chat-bubble" [ngClass]="{'user-bubble': message.isUser, 'bot-bubble': !message.isUser}">
+            {{ message.text }}
+          </div>
+        </div>
+      </p-scrollPanel>
+
+      <!-- Chat Input & Actions -->
+      <div class="chat-input-container">
+        <input pInputText type="text" [(ngModel)]="newMessage" (keydown.enter)="sendMessage()" class="chat-input" placeholder="Send a message..." />
+        <p-button icon="pi pi-send" class="send-button" (click)="sendMessage()"></p-button>
+        <input type="file" #fileInput (change)="uploadFile($event)" style="display: none" />
+        <button pButton class="upload-button" (click)="fileInput.click()" pTooltip="Upload File">
+          <i class="pi pi-plus"></i> <!-- PrimeIcons Plus Icon -->
+        </button>
+      </div>
+    </ng-template>
+  </p-card>
+</div>
+

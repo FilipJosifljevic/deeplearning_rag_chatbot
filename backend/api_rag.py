@@ -1,6 +1,7 @@
 import os
 import prompts
 import rag
+import threading
 from vectorstore import initialize_chroma, load_pdfs_from_directory, add_new_pdf_to_chroma
 from fastapi import Request
 from fastapi import FastAPI, HTTPException, File, UploadFile
@@ -28,7 +29,7 @@ app.mount('/static', StaticFiles(directory=frontend_files_path, html=True), name
 
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
-    if full_path and full_path not in ["chat", "upload"]:
+    if full_path and full_path not in ["chat", "query", "upload"]:
         return FileResponse(f"{frontend_files_path}/{full_path}")
     return FileResponse(f"{frontend_files_path}/index.html")
 
@@ -70,14 +71,9 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.post("/api/query/")
 async def query_rag_chatbot(request: QueryRequest):
-    query = request.query
+    query=request.query
     try:
-        
-        stream_generator  = rag.ask_the_chatbot(query)
-
-        #return {"response": list(stream_generator)}
-        return StreamingResponse(stream_generator, media_type="text/event-stream")
-
+        return StreamingResponse(rag.generate_streaming_response(query), media_type="text/event-stream", headers={"X-Accel-Buffering": "no"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
