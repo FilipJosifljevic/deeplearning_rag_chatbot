@@ -1,27 +1,29 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Observer } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChatService {
-  sendQuery(query: string): Observable<string> {
-    return new Observable(observer => {
-      fetch('/api/query/', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({query}),
-      })
-      .then(response => {
-        const reader = response.body?.getReader();
-        if(!reader) {
-          observer.error(new Error("Failed to get reader from the response body"));
-          return;
-        }
+  private apiUrl = '/api/query/'
 
-        const decoder = new TextDecoder();
-        const readStream = () => {
+  sendQuery(query: string): Observable<any> {
+    return new Observable(observer =>  {
+    fetch(this.apiUrl, {
+    	method: 'POST',
+    	headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+    })
+    .then(response => {
+    	const reader = response.body?.getReader();
+	const decoder = new TextDecoder();
+
+	if (!reader) {
+		observer.error('No response body');
+		return;
+	}
+	const readStream = () => {
 		reader.read().then(({ done, value }) => {
             if (done) {
               observer.complete();
@@ -29,11 +31,7 @@ export class ChatService {
             }
 
 	    const chunk = decoder.decode(value , {stream: true});
-	    if (chunk.includes("[heartbeat]")){
-        console.log("Recieved heartbeat...")
-      } else {
-        observer.next(chunk);
-      }
+	    observer.next(chunk);
 	    readStream();
 	}).catch(error => observer.error(error));
 	};
@@ -41,5 +39,4 @@ export class ChatService {
     })
     .catch(error => observer.error(error));
     });
-}
-}
+} }

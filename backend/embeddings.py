@@ -11,3 +11,5 @@ encode_kwargs = {"normalize_embeddings": True}
 def get_hf_embeddings():
     return HuggingFaceEmbeddings( model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs)
 
+def get_mxbai_embeddings():
+    return HuggingFaceEmbeddings(model_name="mixedbread-ai/mxbai-embed-large-v1")

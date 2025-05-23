@@ -1,2 +1,56 @@
 /* You can add global styles to this file, and also import other style files */
 @import "primeicons/primeicons.css";
+
+* {
+  font-family: 'Roboto', sans-serif;
+}
+
+:root {
+  --panel-bg: #ffffff;
+  --panel-border: #e0e0e0;
+  --panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --panel-radius: 12px;
+}
+
+/* Overlay panel wrapper */
+body .p-overlaypanel {
+  background-color: var(--panel-bg) !important;
+  border: 1px solid var(--panel-border) !important;
+  border-radius: var(--panel-radius) !important;
+  box-shadow: var(--panel-shadow) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+/* Overlay content */
+body .p-overlaypanel .p-overlaypanel-content {
+  padding: 1rem 1.25rem !important;
+  color: #333 !important;
+  font-size: 0.95rem !important;
+  background-color: var(--panel-bg) !important;
+}
+
+/* Close icon */
+body .p-overlaypanel .p-overlaypanel-close {
+  background: transparent !important;
+  color: #888 !important;
+  top: 0.75rem !important;
+  right: 0.75rem !important;
+}
+
+
+/* Tooltip */
+.p-tooltip {
+  background-color: #ffffff !important;
+  border: 1px solid #dcdcdc !important;
+  color: #333 !important;
+  font-size: 0.875rem !important;
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+}
+
+.p-tooltip .p-tooltip-arrow {
+  display: none !important; /* Optional: clean look */
+}
+

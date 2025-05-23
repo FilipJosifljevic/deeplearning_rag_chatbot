@@ -9,8 +9,8 @@
     <ng-template pTemplate="content">
       <!-- Chat Messages -->
       <p-scrollPanel class="chat-window">
-        <div *ngFor="let message of messages" [ngClass]="{'user-message': message.isUser, 'bot-message': !message.isUser}">
-          <div class="chat-bubble" [ngClass]="{'user-bubble': message.isUser, 'bot-bubble': !message.isUser}">
+        <div *ngFor="let message of messages" [ngClass]="{ 'user-message': message.isUser, 'bot-message': !message.isUser }">
+          <div class="chat-bubble" [ngClass]="{ 'user-bubble': message.isUser, 'bot-bubble': !message.isUser }">
             {{ message.text }}
           </div>
         </div>
@@ -18,14 +18,30 @@
 
       <!-- Chat Input & Actions -->
       <div class="chat-input-container">
-        <input pInputText type="text" [(ngModel)]="newMessage" (keydown.enter)="sendMessage()" class="chat-input" placeholder="Send a message..." />
+        <input
+          pInputText
+          type="text"
+          [(ngModel)]="newMessage"
+          (keydown.enter)="sendMessage()"
+          class="chat-input"
+          placeholder="Send a message..."
+        />
         <p-button icon="pi pi-send" class="send-button" (click)="sendMessage()"></p-button>
+
         <input type="file" #fileInput (change)="uploadFile($event)" style="display: none" />
         <button pButton class="upload-button" (click)="fileInput.click()" pTooltip="Upload File">
-          <i class="pi pi-plus"></i> <!-- PrimeIcons Plus Icon -->
+          <i class="pi pi-plus"></i>
         </button>
-      </div>
-    </ng-template>
+        <button pButton class="info-button" (click)="op.toggle($event)">
+          <i class="pi pi-database"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col gap-4 w-[25rem]">
+            <p>asdsdadsa</p><br><p>asdsdadsa</p><br><p>asdsdadsa</p><br><p>asdsdadsa</p><br><p>asdsdadsa</p>
+          </div>
+        </p-popover>
+        </div>
+            </ng-template>
   </p-card>
 </div>
 

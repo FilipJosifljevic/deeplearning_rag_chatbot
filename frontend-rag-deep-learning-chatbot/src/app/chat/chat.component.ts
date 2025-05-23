@@ -5,24 +5,29 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../chat.service';
 import { FileService } from '../file.service';
+import { DocumentsService} from '../documents.service';
+import { Observable } from 'rxjs';
 import { DividerModule } from 'primeng/divider';
 import { ButtonModule } from 'primeng/button'
 import { InputTextModule } from 'primeng/inputtext';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { CardModule } from 'primeng/card';
+import { Popover } from 'primeng/popover';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageModule } from 'primeng/message';
 @Component({
     selector: 'app-chat',
-    imports: [CommonModule, FormsModule, ButtonModule, MessageModule, DividerModule, InputTextModule, FileUploadModule, CardModule, ScrollPanelModule],
+    imports: [CommonModule, FormsModule, ButtonModule, MessageModule, DividerModule, InputTextModule, FileUploadModule, CardModule, ScrollPanelModule, Popover, TooltipModule],
     templateUrl: './chat.component.html',
     styleUrls: ['./chat.component.css']
 })
 export class ChatComponent {
   messages: { text: string; isUser: boolean }[] = [];
   newMessage: string = '';
+  uploadedFiles: string[] = [];
 
-  constructor(private chatService: ChatService, private fileService: FileService, private cdr: ChangeDetectorRef) {}
+  constructor(private chatService: ChatService, private fileService: FileService, private documentsService: DocumentsService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.messages.push({ text: 'Welcome! How can I help you today?', isUser: false });
@@ -95,5 +100,16 @@ export class ChatComponent {
     });
   }
 
+private getUploadedFiles(): void {
+  this.documentsService.getDocuments().subscribe({
+    next: (docs) => {
+      this.uploadedFiles = docs;
+      this.cdr.detectChanges(); // Update the view
+    },
+    error: (error) => {
+      console.error('Error fetching uploaded documents:', error);
+    }
+  });
 }
 
+}

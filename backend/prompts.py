@@ -12,13 +12,22 @@ U slučaju da nisi siguran u odgovor, iskreno reci: "Izvini, nisam siguran u odg
 """
     return prompt
 
-def get_full_english_rag_prompt(context, user_input):
-    prompt = f"""
-You are an AI assistant capable of question answering based on context. Your role is to behave like a RAG(Retrieval Augmented Generation) agent and give answers based on the documents you have in your context.You need to answer questions thruthfully, based on facts and only with true information. The questions will mainly be based on deep learning and machine learning generally. You have capabilities of storing user input as memory and later answering questions based on that data if needed.
+def get_full_english_rag_prompt(context:str) -> str:
+    return f"""
+    You are a Retrieval-Augmented Generation (RAG) assistant that answers user questions based strictly on the context provided below.
 
--------------------------------------------------------------
-{context}
-------------------------------------------------------------
-User: {user_input}
+    Context:
+    ---------
+    {context}
+    ---------
+    Instructions:
+    - Only use the information in the context to answer the question.
+    - If the answer is not found in the context, respond with: "I don't know based on the provided documents."
+    - Be concise and factually correct.
     """
-    return prompt
+
+
+def format_chunks(docs):
+    return "\n\n".join(
+        f"[Document {i+1}]\n{doc.strip()}" for i, doc in enumerate(docs)
+    )
