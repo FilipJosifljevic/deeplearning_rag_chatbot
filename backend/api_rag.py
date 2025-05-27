@@ -3,7 +3,7 @@ import prompts
 import rag
 import threading
 import json
-from vectorstore import load_pdfs_from_directory, add_new_pdf_to_chroma
+from vectorstore import load_pdfs_from_directory, add_new_pdf_to_chroma, load_faiss
 from load_and_clean_text import extract_text_from_pdf
 from chunks import get_recursively_split_chunks, get_recursively_split_chunks_bigger
 from fastapi import Request
@@ -71,7 +71,9 @@ async def upload_file(file: UploadFile = File(...)):
         processed_chunks = get_recursively_split_chunks(processed_text)
         processed_chunks_bigger = get_recursively_split_chunks_bigger(processed_text)
         uploaded_chunks = processed_chunks + processed_chunks_bigger
-        uploaded_documents.append(uploaded_chunks)
+        uploaded_documents.extend(uploaded_chunks)
+        faiss_vectorstore = load_faiss()
+        faiss_vectorstore.add_documents(documents=uploaded_documents)
 
         return {"message": f"File '{file.filename}' successfully added to FAISS index"}
 

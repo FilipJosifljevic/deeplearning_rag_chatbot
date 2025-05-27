@@ -47,7 +47,8 @@ def load_faiss():
     if faiss_vectorstore is None:
         faiss_vectorstore = FAISS.load_local(
             "/workspace/faiss_index",
-            embeddings = get_mxbai_embeddings()
+            embeddings = get_mxbai_embeddings(),
+            allow_dangerous_deserialization=True
             )
         print("FAISS loaded from local")
     return faiss_vectorstore
