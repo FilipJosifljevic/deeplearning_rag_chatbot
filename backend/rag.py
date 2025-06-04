@@ -17,7 +17,7 @@ from langchain.document_loaders import PyPDFDirectoryLoader
 from sentence_transformers import SentenceTransformer, util
 from dotenv import load_dotenv
 from chunks import get_semantic_chunks
-from vectorstore import load_faiss
+from vectorstore import initialize_chroma
 from embeddings import get_hf_embeddings
 
 logging.basicConfig(level=logging.INFO)
@@ -35,6 +35,8 @@ client = OpenAI(
 chat_memory = []
 
 texts = []
+
+#faiss_vectorstore = None
 
 async def openai_response(query: str):
     try:
@@ -61,11 +63,12 @@ async def openai_response(query: str):
         yield f"Error : {str(e)}"
 
 def retrieve_relevant_documents(query, top_k=10):
-    #chromadb = initialize_chroma()
-    #embedded_query = get_hf_embeddings().embed_query(query)
-    #results = chromadb.similarity_search(query, k=top_k)
-    faiss_vectorstore = load_faiss()
-    results = faiss_vectorstore.similarity_search(query, top_k)
+    chromadb = initialize_chroma()
+    results = chromadb.similarity_search(query, k=top_k)
+    #global faiss_vectorstore
+    #if faiss_vectorstore is None:
+        #faiss_vectorstore = load_faiss()
+    #results = faiss_vectorstore.similarity_search(query, top_k)
     #return rerank_with_sbert(query, results)
     return [doc.page_content for doc in results]
 

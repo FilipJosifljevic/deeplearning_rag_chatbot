@@ -3,11 +3,11 @@ FROM python:3.10-slim
 WORKDIR /workspace
 
 COPY requirements.txt /workspace/requirements.txt
-COPY .env /workspace/.env
 
 RUN pip3 config set global.index-url https://pypi.org/simple
 RUN pip3 install --no-cache-dir --no-use-pep517 -r /workspace/requirements.txt --progress-bar off
 
+COPY .env /workspace/.env
 COPY . .
 
 EXPOSE 8000

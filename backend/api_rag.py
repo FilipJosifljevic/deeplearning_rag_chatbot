@@ -3,7 +3,7 @@ import prompts
 import rag
 import threading
 import json
-from vectorstore import load_pdfs_from_directory, add_new_pdf_to_chroma, load_faiss
+from vectorstore import load_pdfs_from_directory, add_new_pdf_to_chroma
 from load_and_clean_text import extract_text_from_pdf
 from chunks import get_recursively_split_chunks, get_recursively_split_chunks_bigger
 from fastapi import Request
@@ -42,6 +42,7 @@ class QueryRequest(BaseModel):
     query: str
 
 DOCUMENTS_DIR = "/workspace/documents"
+faiss_vectorstore = None
 
 # Automatically load all documents from the folder into the ChromaDB on startup
 @app.on_event("startup")
@@ -51,7 +52,6 @@ async def load_existing_documents():
         if not os.path.exists(DOCUMENTS_DIR):
             os.makedirs(DOCUMENTS_DIR)
 
-        #initialize_chroma()
         load_pdfs_from_directory(DOCUMENTS_DIR)
 
     except Exception as e:
@@ -66,14 +66,21 @@ async def upload_file(file: UploadFile = File(...)):
         with open(file_location, "wb") as f:
             f.write(await file.read())
 
-        uploaded_documents = []
+        '''uploaded_documents = []
         processed_text = extract_text_from_pdf(file_location)
         processed_chunks = get_recursively_split_chunks(processed_text)
         processed_chunks_bigger = get_recursively_split_chunks_bigger(processed_text)
         uploaded_chunks = processed_chunks + processed_chunks_bigger
         uploaded_documents.extend(uploaded_chunks)
-        faiss_vectorstore = load_faiss()
+
+        global faiss_vectorstore
+        if faiss_vectorstore is None:
+            faiss_vectorstore = load_faiss()
+        
         faiss_vectorstore.add_documents(documents=uploaded_documents)
+        faiss_vectorstore.save_local("/workspace/faiss_index")'''
+
+        add_new_pdf_to_chroma(file_location)
 
         return {"message": f"File '{file.filename}' successfully added to FAISS index"}
 
